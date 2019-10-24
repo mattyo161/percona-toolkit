@@ -1,0 +1,225 @@
+#!/usr/bin/env bash
+
+# This program is part of Percona Toolkit: http://www.percona.com/software/
+# See "COPYRIGHT, LICENSE, AND WARRANTY" at the end of this file for legal
+# notices and disclaimers.
+
+TOOL="pt-split"
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+LIBDIR=${BASEDIR}/../lib
+
+source "${LIBDIR}/bash/log_warn_die.sh"
+source "${LIBDIR}/bash/tmpdir.sh"
+source "${LIBDIR}/bash/parse_options.sh"
+source "${LIBDIR}/bash/alt_cmds.sh"
+
+
+set +u
+
+
+# The main program to run.
+main() {
+   if [ -z "$ARGV" ]; then
+      usage $0
+   else
+      FILES=($ARGV)
+      if [ -z "$OPT_FILEPREFIX" ]; then
+        prefix=${FILES[0]}.
+      else
+        prefix=${OPT_FILEPREFIX}.
+      fi
+      out=$(cat ${FILES[*]} | csplit -n 6 -f $prefix -k - '/^TS /' '{9999}' 2>&1)
+      # echo $out
+      ls -la ${prefix}[0-9]*
+   fi
+
+}
+
+# Execute the program if it was not included from another file.  This makes it
+# possible to include without executing, and thus test.
+if    [ "${0##*/}" = "$TOOL" ] \
+   || [ "${0##*/}" = "bash" -a "${_:-""}" = "$0" ]; then
+
+   mk_tmpdir
+
+   parse_options "$0" "${@:-""}"
+
+   if [ -z "$OPT_HELP" -a -z "$OPT_VERSION" ]; then
+      # Validate options
+      :
+   fi
+   usage_or_errors "$0"
+   if [ "$OPT_MAN" ]; then
+        perldoc "$0"
+        exit 0
+   fi
+   po_status=$?
+   if [ $po_status -ne 0 ]; then
+      [ $OPT_ERRS -gt 0 ] && exit 1
+   fi
+   if [ -z "$OPT_HELP" -a -z "$OPT_VERSION" -a -z "$OPT_MAN" ]; then
+    main $ARGV
+   fi
+
+   rm_tmpdir
+fi
+
+# ############################################################################
+# Documentation
+# ############################################################################
+:<<'DOCUMENTATION'
+=pod
+
+=head1 NAME
+
+pt-split - Given a list of files, split them on file or lines that begin with /^TS /. Files
+will be prefixed with the first file in the list of files provided.
+
+=head1 SYNOPSIS
+
+Usage: pt-split [OPTIONS] [FILES]
+
+pt-split is a simplified wrapper for the csplit (contextual split) command that
+
+=head1 RISKS
+
+SUPPLEMENTAL - This is an additional tool on top of standard Perconal Toolkit
+This should be considered ALPHA code, USE AT YOUR OWN RISK!
+
+Percona Toolkit is mature, proven in the real world, and well tested,
+but all database tools can pose a risk to the system and the database
+server.  Before using this tool, please:
+
+=over
+
+=item * Read the tool's documentation
+
+=item * Review the tool's known L<"BUGS">
+
+=item * Test the tool on a non-production server
+
+=item * Backup your production server and verify the backups
+
+=back
+
+=head1 DESCRIPTION
+
+pt-split will take a list of files, and split them into separate files based on file
+breaks or lines that begin with /^TS /. Files will be named based on the first file
+in the list. Unless a `-f` option is passed.
+
+=head1 OPTIONS
+
+=over
+
+=item --fileprefix
+
+short form: -f; type: string
+
+Prefix to give filenames that data will be split into.
+
+=item --help
+
+Show help and exit.
+
+=item --man
+
+Display Manual Page.
+
+=item --version
+
+Show version and exit.
+
+=back
+
+=head1 ENVIRONMENT
+
+This tool does not use any environment variables.
+
+=head1 SYSTEM REQUIREMENTS
+
+This tool requires Bash v3 or newer.  If no backtrace files are given,
+then gdb is also required to create backtraces for the process specified
+on the command line.
+
+=head1 BUGS
+
+For a list of known bugs, see L<http://www.percona.com/bugs/pt-pmp>.
+
+Please report bugs at L<https://jira.percona.com/projects/PT>.
+Include the following information in your bug report:
+
+=over
+
+=item * Complete command-line used to run the tool
+
+=item * Tool L<"--version">
+
+=item * MySQL version of all servers involved
+
+=item * Output from the tool including STDERR
+
+=item * Input files (log/dump/config files, etc.)
+
+=back
+
+If possible, include debugging output by running the tool with C<PTDEBUG>;
+see L<"ENVIRONMENT">.
+
+=head1 DOWNLOADING
+
+Visit L<http://www.percona.com/software/percona-toolkit/> to download the
+latest release of Percona Toolkit.  Or, get the latest release from the
+command line:
+
+   wget percona.com/get/percona-toolkit.tar.gz
+
+   wget percona.com/get/percona-toolkit.rpm
+
+   wget percona.com/get/percona-toolkit.deb
+
+You can also get individual tools from the latest release:
+
+   wget percona.com/get/TOOL
+
+Replace C<TOOL> with the name of any tool.
+
+=head1 AUTHORS
+
+Matt Ouellette, a guy that likes to make things easier (L<https://github.com/mattyo161>)
+
+=head1 ABOUT PERCONA TOOLKIT
+
+This tool is part of Percona Toolkit, a collection of advanced command-line
+tools for MySQL developed by Percona.  Percona Toolkit was forked from two
+projects in June, 2011: Maatkit and Aspersa.  Those projects were created by
+Baron Schwartz and primarily developed by him and Daniel Nichter.  Visit
+L<http://www.percona.com/software/> to learn about other free, open-source
+software from Percona.
+
+=head1 COPYRIGHT, LICENSE, AND WARRANTY
+
+This program is copyright 2011-2018 Percona LLC and/or its affiliates,
+2010-2011 Baron Schwartz.
+
+THIS PROGRAM IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, version 2; OR the Perl Artistic License.  On UNIX and similar
+systems, you can issue `man perlgpl' or `man perlartistic' to read these
+licenses.
+
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+Place, Suite 330, Boston, MA  02111-1307  USA.
+
+=head1 VERSION
+
+pt-split 0.0.1
+
+=cut
+
+DOCUMENTATION
