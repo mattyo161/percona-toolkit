@@ -14,6 +14,28 @@ Percona Toolkit is developed and supported by Percona Inc.  For more
 information and other free, open-source software developed by Percona,
 visit [http://www.percona.com/software/](http://www.percona.com/software/).
 
+## Local Development
+
+Personally I like to use the commands line and develop live. I simply add 
+the bin directory to my path and now any changes I make are immediately
+available from anywhere. If you are like me you can run the quick-install.sh
+script or enter the following on the command line.
+
+```bash
+./quick-install.sh
+```
+
+### Manually update `.bash_profile`
+Add the following to your `.bash_profile` and you are on your way.
+```
+export PATH="<path to pt bin>:${PATH}"
+```
+
+Or even easier just run the following from the percona-toolkit root directory.
+```bash
+echo "export PATH=\"$(pwd)/bin:\${PATH}\"" >> ~/.bash_profile
+```
+
 ## Installing
 
 To install all tools, run:
