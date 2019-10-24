@@ -1,0 +1,24 @@
+#!/bin/bash
+function pt_print_semaphores_summary() {
+  local sample=$1;
+  echo "Threads are waiting at:"
+  grep 'has waited at' "${sample}"|awk '{print $6,$8}'|sort |uniq -c|sort -nr
+
+  echo "Threads holding the mutex:"
+  grep 'has reserved it in mode' "${sample}"|sort |uniq -c |sort -nr|sort
+
+  echo "Mutexes being waited:"
+  grep 'created in file' "${sample}"|sort |uniq -c |sort -nr
+}
+
+
+function usage() {
+  echo "Please provide SHOW ENGINE INNODB STATUS sample path"
+  exit;
+}
+
+if [[ -z "$1" ]]; then {
+  usage;
+} fi;
+
+pt_print_semaphores_summary "$1";
